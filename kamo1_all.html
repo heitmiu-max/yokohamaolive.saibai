@@ -1,0 +1,622 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>カモ1（A～H列） 2025年収穫実績マップ</title>
+<style>
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #fafafa;
+    color: #333;
+    margin: 0;
+    padding: 40px 0; /* 上下の余白のみ確保 */
+}
+
+.container {
+    background: #fff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    width: 1360px; /* 全体の幅を完全に固定。これで中の配置が絶対に崩れません */
+    box-sizing: border-box;
+    margin: 0 auto; /* 画面の中央に配置 */
+    position: relative;
+}
+
+h1 { text-align: center; font-size: 24px; margin-bottom: 30px; }
+.legend { text-align: center; margin-bottom: 30px; }
+.legend-title { font-weight: bold; margin-bottom: 15px; }
+.legend-items { display: flex; justify-content: center; gap: 20px; font-size: 12px; }
+.legend-item { display: flex; align-items: center; flex-direction: column; gap: 5px; }
+.legend-color { width: 24px; height: 24px; border-radius: 50%; }
+
+/* 色の定義 */
+.gray { background-color: #7a7a7a; color: #fff; } /* 5kg未満 */
+.blue { background-color: #00a2e8; color: #fff; } /* 5～10kg未満 */
+.green { background-color: #3b9b3f; color: #fff; } /* 10～20kg未満 */
+.yellow { background-color: #e6c100; color: #fff; } /* 20～30kg未満 */
+.orange { background-color: #f38400; color: #fff; } /* 30～40kg未満 */
+.red { background-color: #d73535; color: #fff; } /* 40kg以上 */
+
+/* 方角 */
+.direction-top { text-align: center; font-size: 16px; margin-bottom: 10px; font-weight: bold; color: #e74c3c; } /* 北を赤色に */
+.direction-bottom { text-align: center; font-size: 16px; margin-top: 50px; margin-bottom: 10px; font-weight: bold; color: #333; }
+.divider { border-top: 1px solid #ccc; margin-bottom: 30px; }
+
+/* 畑全体のグリッド */
+.grid {
+    display: flex;
+    flex-direction: column;
+    gap: 35px; /* 行と行の隙間（通路） */
+    position: relative; /* 左の文字を絶対配置するための基準 */
+    align-items: center; /* 行全体を中央揃え */
+}
+
+/* 1つの行（A列、B列...） */
+.row {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* 樹木を中央に配置 */
+}
+
+/* 左側の列番号ラベル (A列、B列...) - コンテナの左端に固定 */
+.row-label {
+    position: absolute;
+    left: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #666;
+    width: 60px;
+}
+
+/* 樹木のカードを並べる箱 */
+.cards {
+    display: flex;
+    gap: 20px; /* 樹と樹の隙間（列間の間隔） */
+    padding-left: 80px; /* 左のラベルと被らないように余白を作る */
+}
+
+/* 1本の樹のラッパー */
+.card-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 130px; /* 1マスの幅を固定 */
+}
+
+/* 空白のマス（木がない場所用） */
+.card-empty {
+    width: 130px;
+    height: 120px;
+}
+
+/* 樹木の丸 */
+.circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.circle-text {
+    text-align: center;
+    line-height: 1.2;
+    margin-top: -10px;
+}
+
+.c-title { font-size: 18px; font-weight: bold; margin-bottom: 2px; }
+.c-id { font-size: 10px; opacity: 0.9; margin-bottom: 4px; }
+.c-weight { font-size: 22px; font-weight: bold; margin-bottom: 4px; }
+.c-weight span { font-size: 12px; font-weight: normal; }
+.c-date { font-size: 10px; }
+
+/* 品種ラベル */
+.breed-box {
+    background: #fff;
+    border: 1px solid #999;
+    font-size: 11px;
+    padding: 4px 0;
+    width: 110px;
+    text-align: center;
+    margin-top: -12px;
+    position: relative;
+    z-index: 2;
+}
+
+/* 品種ごとの文字色 */
+.breed-neba { color: #8e44ad; } /* 紫 */
+.breed-cip { color: #d4ac0d; } /* マスタード */
+.breed-fran { color: #2980b9; } /* 青 */
+.breed-jumbo { color: #c0392b; } /* 赤 */
+.breed-moraiolo { color: #16a085; } /* 青緑 */
+.breed-lucca { color: #d35400; } /* オレンジ */
+
+/* コンパス（右上） */
+.compass {
+    position: absolute;
+    top: 40px;
+    right: 50px;
+    width: 80px;
+    height: 80px;
+}
+
+/* 右下（南東）の畑エリア枠 */
+.farm-area-se {
+    position: absolute;
+    right: 140px; /* 右端からの位置 */
+    bottom: -10px; /* 下からの位置 */
+    height: 300px; /* 縦幅（E～H列の右側） */
+    width: 280px; /* 横幅（7?8列分） */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #aaa;
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: 0.5em;
+    background-color: rgba(0,0,0,0.02);
+    border-radius: 20px;
+    border: 2px dashed #ddd;
+    z-index: 1; /* 樹木より後ろに配置 */
+}
+
+/* 右上の水路・小川エリア */
+.river-area-ne {
+    position: absolute;
+    right: 140px;
+    top: 130px; /* A列のあたり */
+    height: 300px; 
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #7ab8cc;
+    font-size: 20px;
+    font-weight: bold;
+    background-color: rgba(122,184,204,0.05); /* 薄い水色 */
+    border-radius: 20px;
+    border: 2px dashed #a8d0e6;
+    z-index: 1;
+}
+
+/* 統計情報エリア */
+.summary-stats {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 15px 30px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+.summary-title { font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+.summary-details { font-size: 13px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+.summary-total { font-size: 20px; font-weight: bold; color: #222; margin-top: 5px; }
+
+/* パスワード入力画面を一番手前に表示するための設定 */
+#password-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(30, 30, 30, 0.98); z-index: 99999;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff;
+}
+/* 1440pxの縮小表示下でもスマホで大きく見えるように、数値を約2.8倍（超巨大）に設定 */
+.pass-content-box {
+    display: flex; flex-direction: column; align-items: center;
+    transform: scale(2.8); /* スマホ用に全体を拡大 */
+}
+@media screen and (min-width: 1024px) {
+    .pass-content-box { transform: scale(1); } /* PCでは等倍に戻す */
+}
+.pass-content-box h2 { font-size: 28px; margin-bottom: 10px; text-align: center; }
+.pass-content-box p { font-size: 16px; margin-bottom: 20px; color:#aaa; }
+#pass-input { padding: 10px; font-size: 32px; width: 200px; text-align: center; border-radius: 8px; border: none; margin-bottom: 20px; letter-spacing: 10px;}
+.error-container { height: 30px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; }
+#pass-error { color: #ff6b6b; font-weight: bold; font-size: 16px; margin: 0; display: none; }
+#pass-btn { padding: 15px 40px; font-size: 20px; background-color: #3b9b3f; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; z-index: 100000; position: relative;}
+
+html { scroll-behavior: smooth; }
+
+/* アンカーリンクで飛んできた時に上部が隠れないようにする */
+.card-wrapper {
+    scroll-margin-top: 150px; /* 上に150pxの余白を持ってスクロールを止める */
+    scroll-margin-left: 50px;
+}
+
+/* ターゲットにジャンプした際の一時的なハイライトアニメーション（オプション） */
+:target .circle {
+    box-shadow: 0 0 0 10px rgba(41, 128, 185, 0.4);
+    animation: focus-pulse 1.5s 2;
+}
+
+@keyframes focus-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(41, 128, 185, 0.7); }
+    50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(41, 128, 185, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(41, 128, 185, 0); }
+}
+
+</style></head><body>
+
+<div id="password-overlay">
+    <div class="pass-content-box">
+        <h2>カモ1 収穫実績<br>ダッシュボード</h2>
+        <p>暗証番号を入力してください</p>
+        <input type="password" id="pass-input" placeholder="****" inputmode="numeric" pattern="\d*">
+        
+        <div class="error-container">
+            <p id="pass-error">暗証番号が違います</p>
+        </div>
+
+        <button id="pass-btn" onclick="checkPassword()">データを見る</button>
+    </div>
+</div>
+<div class="container">
+<div class="compass">
+    <svg width="100%" height="100%" viewBox="-15 -15 130 130">
+        <circle cx="50" cy="50" r="35" stroke="#ccc" stroke-width="2" fill="none" />
+        <polygon points="50,10 42,50 58,50" fill="#e74c3c" /> <polygon points="90,50 50,42 50,58" fill="#bdc3c7" /> <polygon points="50,90 42,50 58,50" fill="#bdc3c7" /> <polygon points="10,50 50,42 50,58" fill="#7f8c8d" /> <circle cx="50" cy="50" r="5" fill="#2c3e50" />
+        <text x="50" y="2" font-size="18" font-weight="bold" text-anchor="middle" fill="#e74c3c">北</text>
+        <text x="50" y="112" font-size="18" font-weight="bold" text-anchor="middle" fill="#333">南</text>
+        <text x="6" y="62" font-size="18" font-weight="bold" text-anchor="end" fill="#333">西</text>
+        <text x="94" y="62" font-size="18" font-weight="bold" text-anchor="start" fill="#333">東</text>
+    </svg>
+</div>
+
+<h1>カモ1 2025年収穫実績</h1>
+
+<div class="legend">
+    <div class="legend-title">【収穫量 色分けルール】</div>
+    <div class="legend-items">
+        <div class="legend-item"><div class="legend-color gray"></div>5kg未満</div>
+        <div class="legend-item"><div class="legend-color blue"></div>5～10kg未満</div>
+        <div class="legend-item"><div class="legend-color green"></div>10～20kg未満</div>
+        <div class="legend-item"><div class="legend-color yellow"></div>20～30kg未満</div>
+        <div class="legend-item"><div class="legend-color orange"></div>30～40kg未満</div>
+        <div class="legend-item"><div class="legend-color red"></div>40kg以上</div>
+    </div>
+</div>
+
+<div class="direction-top">北側（道）</div>
+<div class="divider"></div>
+
+<div class="summary-stats">
+    <div class="summary-title">【 カモ1 品種別 収穫実績 】</div>
+    <div class="summary-details">
+        <span style='white-space: nowrap;'><b style="color:#2980b9;">フラントイオ</b>: 11本 (221.7kg)</span> / <span style='white-space: nowrap;'><b style="color:#333;">ミッション</b>: 41本 (644.2kg)</span> / <span style='white-space: nowrap;'><b style="color:#8e44ad;">ネバディロ・ブロンコ</b>: 2本 (3.1kg)</span> / <span style='white-space: nowrap;'><b style="color:#16a085;">モライオロ</b>: 1本 (24.7kg)</span> / <span style='white-space: nowrap;'><b style="color:#d35400;">ルッカ</b>: 1本 (18.6kg)</span> / <span style='white-space: nowrap;'><b style="color:#d4ac0d;">シプレッシーノ</b>: 3本 (2.4kg)</span>
+    </div>
+    <div class="summary-total">総合計: 59本 / 914.7 kg</div>
+</div>
+
+<div class="grid">
+
+<div class="farm-area-se">
+    <div style="text-align: center;">
+        <span style="font-size: 20px;">隣接の</span><br>
+        <span style="font-size: 32px; font-weight: 900; color: #888;">畑</span>
+    </div>
+</div>
+
+<div class="river-area-ne">
+    <span style="font-size: 28px; font-weight: 900; color: #7ab8cc; letter-spacing: 0.2em;">水路（小川）</span>
+</div>
+
+<div class="row">
+    <div class="row-label"></div>
+    <div class="cards" style="padding-bottom:10px;">
+        <div style="width:130px; text-align:center; font-weight:bold; font-size:14px; color:#666;">1列目</div>
+        <div style="width:130px; text-align:center; font-weight:bold; font-size:14px; color:#666;">2列目</div>
+        <div style="width:130px; text-align:center; font-weight:bold; font-size:14px; color:#666;">3列目</div>
+        <div style="width:130px; text-align:center; font-weight:bold; font-size:14px; color:#666;">4列目</div>
+        <div style="width:130px; text-align:center; font-weight:bold; font-size:14px; color:#666;">5列目</div>
+        <div style="width:130px; text-align:center; font-weight:bold; font-size:14px; color:#666;">6列目</div>
+        <div style="width:130px; text-align:center; font-weight:bold; font-size:14px; color:#666;">7列目</div>
+        <div style="width:130px; text-align:center; font-weight:bold; font-size:14px; color:#666;">8列目</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="row-label">A列</div>
+    <div class="cards">
+        <div class="card-wrapper" id="plot-A-1"><div class="circle orange"><div class="circle-text"><div class="c-title">A-1</div><div class="c-id">ID: 1</div><div class="c-weight">35.01<span>kg</span></div><div class="c-date">収穫日: 10/2</div></div></div><div class="breed-box breed-neba">ネバディロ・ブロンコ</div></div>
+        <div class="card-wrapper" id="plot-A-2"><div class="circle yellow"><div class="circle-text"><div class="c-title">A-2</div><div class="c-id">ID: 6</div><div class="c-weight">29.20<span>kg</span></div><div class="c-date">収穫日: 10/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-A-3"><div class="circle gray"><div class="circle-text"><div class="c-title">A-3</div><div class="c-id">ID: 11</div><div class="c-weight">3.50<span>kg</span></div><div class="c-date">収穫日: 9/26</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-A-4"><div class="circle yellow"><div class="circle-text"><div class="c-title">A-4</div><div class="c-id">ID: 16</div><div class="c-weight">28.40<span>kg</span></div><div class="c-date">収穫日: 10/17</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-A-5"><div class="circle orange"><div class="circle-text"><div class="c-title">A-5</div><div class="c-id">ID: 21</div><div class="c-weight">33.50<span>kg</span></div><div class="c-date">収穫日: 10/29</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-A-6"><div class="circle blue"><div class="circle-text"><div class="c-title">A-6</div><div class="c-id">ID: 26</div><div class="c-weight">9.20<span>kg</span></div><div class="c-date">収穫日: 11/11</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="row-label">B列</div>
+    <div class="cards">
+        <div class="card-wrapper" id="plot-B-1"><div class="circle green"><div class="circle-text"><div class="c-title">B-1</div><div class="c-id">ID: 2</div><div class="c-weight">16.30<span>kg</span></div><div class="c-date">収穫日: 10/5</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+        <div class="card-wrapper" id="plot-B-2"><div class="circle yellow"><div class="circle-text"><div class="c-title">B-2</div><div class="c-id">ID: 7</div><div class="c-weight">29.60<span>kg</span></div><div class="c-date">収穫日: 10/11</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-B-3"><div class="circle blue"><div class="circle-text"><div class="c-title">B-3</div><div class="c-id">ID: 12</div><div class="c-weight">8.60<span>kg</span></div><div class="c-date">収穫日: 9/26</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-B-4"><div class="circle blue"><div class="circle-text"><div class="c-title">B-4</div><div class="c-id">ID: 17</div><div class="c-weight">7.80<span>kg</span></div><div class="c-date">収穫日: 10/24</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-B-5"><div class="circle green"><div class="circle-text"><div class="c-title">B-5</div><div class="c-id">ID: 22</div><div class="c-weight">18.60<span>kg</span></div><div class="c-date">収穫日: 10/29</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-B-6"><div class="circle yellow"><div class="circle-text"><div class="c-title">B-6</div><div class="c-id">ID: 27</div><div class="c-weight">24.70<span>kg</span></div><div class="c-date">収穫日: 11/11</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-B-7"><div class="circle blue"><div class="circle-text"><div class="c-title">B-7</div><div class="c-id">ID: 32</div><div class="c-weight">5.00<span>kg</span></div><div class="c-date">収穫日: 11/19</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-empty"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="row-label">C列</div>
+    <div class="cards">
+        <div class="card-wrapper" id="plot-C-1"><div class="circle green"><div class="circle-text"><div class="c-title">C-1</div><div class="c-id">ID: 3</div><div class="c-weight">19.10<span>kg</span></div><div class="c-date">収穫日: 10/5</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+        <div class="card-wrapper" id="plot-C-2"><div class="circle blue"><div class="circle-text"><div class="c-title">C-2</div><div class="c-id">ID: 8</div><div class="c-weight">9.70<span>kg</span></div><div class="c-date">収穫日: 10/11</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-C-3"><div class="circle yellow"><div class="circle-text"><div class="c-title">C-3</div><div class="c-id">ID: 13</div><div class="c-weight">23.60<span>kg</span></div><div class="c-date">収穫日: 10/17</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-C-4"><div class="circle blue"><div class="circle-text"><div class="c-title">C-4</div><div class="c-id">ID: 18</div><div class="c-weight">6.80<span>kg</span></div><div class="c-date">収穫日: 10/24</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-C-5"><div class="circle green"><div class="circle-text"><div class="c-title">C-5</div><div class="c-id">ID: 23</div><div class="c-weight">19.60<span>kg</span></div><div class="c-date">収穫日: 10/29</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-C-6"><div class="circle blue"><div class="circle-text"><div class="c-title">C-6</div><div class="c-id">ID: 28</div><div class="c-weight">5.00<span>kg</span></div><div class="c-date">収穫日: 11/11</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-C-7"><div class="circle yellow"><div class="circle-text"><div class="c-title">C-7</div><div class="c-id">ID: 33</div><div class="c-weight">20.80<span>kg</span></div><div class="c-date">収穫日: 11/19</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-empty"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="row-label">D列</div>
+    <div class="cards">
+        <div class="card-wrapper" id="plot-D-1"><div class="circle yellow"><div class="circle-text"><div class="c-title">D-1</div><div class="c-id">ID: 4</div><div class="c-weight">21.80<span>kg</span></div><div class="c-date">収穫日: 10/5</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+        <div class="card-wrapper" id="plot-D-2"><div class="circle green"><div class="circle-text"><div class="c-title">D-2</div><div class="c-id">ID: 9</div><div class="c-weight">14.20<span>kg</span></div><div class="c-date">収穫日: 10/11</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-D-3"><div class="circle yellow"><div class="circle-text"><div class="c-title">D-3</div><div class="c-id">ID: 14</div><div class="c-weight">26.30<span>kg</span></div><div class="c-date">収穫日: 10/17</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-D-4"><div class="circle blue"><div class="circle-text"><div class="c-title">D-4</div><div class="c-id">ID: 19</div><div class="c-weight">8.60<span>kg</span></div><div class="c-date">収穫日: 10/24</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-D-5"><div class="circle green"><div class="circle-text"><div class="c-title">D-5</div><div class="c-id">ID: 24</div><div class="c-weight">15.00<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-D-6"><div class="circle green"><div class="circle-text"><div class="c-title">D-6</div><div class="c-id">ID: 29</div><div class="c-weight">16.30<span>kg</span></div><div class="c-date">収穫日: 11/11</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-D-7"><div class="circle green"><div class="circle-text"><div class="c-title">D-7</div><div class="c-id">ID: 34</div><div class="c-weight">13.10<span>kg</span></div><div class="c-date">収穫日: 11/19</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-empty"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="row-label">E列</div>
+    <div class="cards">
+        <div class="card-wrapper" id="plot-E-1"><div class="circle yellow"><div class="circle-text"><div class="c-title">E-1</div><div class="c-id">ID: 5</div><div class="c-weight">20.80<span>kg</span></div><div class="c-date">収穫日: 10/5</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+        <div class="card-wrapper" id="plot-E-2"><div class="circle yellow"><div class="circle-text"><div class="c-title">E-2</div><div class="c-id">ID: 10</div><div class="c-weight">20.10<span>kg</span></div><div class="c-date">収穫日: 10/11</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-E-3"><div class="circle green"><div class="circle-text"><div class="c-title">E-3</div><div class="c-id">ID: 15</div><div class="c-weight">18.60<span>kg</span></div><div class="c-date">収穫日: 10/17</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-E-4"><div class="circle gray"><div class="circle-text"><div class="c-title">E-4</div><div class="c-id">ID: 20</div><div class="c-weight">3.90<span>kg</span></div><div class="c-date">収穫日: 10/24</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-E-5"><div class="circle gray"><div class="circle-text"><div class="c-title">E-5</div><div class="c-id">ID: 25</div><div class="c-weight">0.20<span>kg</span></div><div class="c-date">収穫日: 10/8</div></div></div><div class="breed-box breed-cip">シプレッシーノ</div></div>
+        <div class="card-wrapper" id="plot-E-6"><div class="circle blue"><div class="circle-text"><div class="c-title">E-6</div><div class="c-id">ID: 30</div><div class="c-weight">5.00<span>kg</span></div><div class="c-date">収穫日: 11/11</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="row-label">F列</div>
+    <div class="cards">
+        <div class="card-wrapper" id="plot-F-1"><div class="circle green"><div class="circle-text"><div class="c-title">F-1</div><div class="c-id">ID: 36</div><div class="c-weight">14.10<span>kg</span></div><div class="c-date">収穫日: 10/5</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+        <div class="card-wrapper" id="plot-F-2"><div class="circle blue"><div class="circle-text"><div class="c-title">F-2</div><div class="c-id">ID: 37</div><div class="c-weight">6.80<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-F-3"><div class="circle gray"><div class="circle-text"><div class="c-title">F-3</div><div class="c-id">ID: 38</div><div class="c-weight">4.70<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-F-4"><div class="circle blue"><div class="circle-text"><div class="c-title">F-4</div><div class="c-id">ID: 39</div><div class="c-weight">9.20<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-F-5"><div class="circle gray"><div class="circle-text"><div class="c-title">F-5</div><div class="c-id">ID: 40</div><div class="c-weight">2.00<span>kg</span></div><div class="c-date">収穫日: 10/8</div></div></div><div class="breed-box breed-cip">シプレッシーノ</div></div>
+        <div class="card-wrapper" id="plot-F-6"><div class="circle blue"><div class="circle-text"><div class="c-title">F-6</div><div class="c-id">ID: 31</div><div class="c-weight">8.40<span>kg</span></div><div class="c-date">収穫日: 11/11</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="row-label">G列</div>
+    <div class="cards">
+        <div class="card-wrapper" id="plot-G-1"><div class="circle orange"><div class="circle-text"><div class="c-title">G-1</div><div class="c-id">ID: 41</div><div class="c-weight">37.50<span>kg</span></div><div class="c-date">収穫日: 10/5</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+        <div class="card-wrapper" id="plot-G-2"><div class="circle blue"><div class="circle-text"><div class="c-title">G-2</div><div class="c-id">ID: 42</div><div class="c-weight">8.40<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-G-3"><div class="circle blue"><div class="circle-text"><div class="c-title">G-3</div><div class="c-id">ID: 43</div><div class="c-weight">9.50<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-G-4"><div class="circle yellow"><div class="circle-text"><div class="c-title">G-4</div><div class="c-id">ID: 44</div><div class="c-weight">20.80<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-G-5"><div class="circle gray"><div class="circle-text"><div class="c-title">G-5</div><div class="c-id">ID: 45</div><div class="c-weight">1.02<span>kg</span></div><div class="c-date">収穫日: 10/2</div></div></div><div class="breed-box breed-neba">ネバディロ・ブロンコ</div></div>
+        <div class="card-wrapper" id="plot-G-6"><div class="circle yellow"><div class="circle-text"><div class="c-title">G-6</div><div class="c-id">ID: 46</div><div class="c-weight">21.80<span>kg</span></div><div class="c-date">収穫日: 11/11</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="row-label">H列</div>
+    <div class="cards">
+        <div class="card-wrapper" id="plot-H-1"><div class="circle green"><div class="circle-text"><div class="c-title">H-1</div><div class="c-id">ID: 47</div><div class="c-weight">12.90<span>kg</span></div><div class="c-date">収穫日: 10/5</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+        <div class="card-wrapper" id="plot-H-2"><div class="circle blue"><div class="circle-text"><div class="c-title">H-2</div><div class="c-id">ID: 48</div><div class="c-weight">5.00<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-H-3"><div class="circle green"><div class="circle-text"><div class="c-title">H-3</div><div class="c-id">ID: 49</div><div class="c-weight">13.20<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-H-4"><div class="circle green"><div class="circle-text"><div class="c-title">H-4</div><div class="c-id">ID: 50</div><div class="c-weight">13.10<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-H-5"><div class="circle green"><div class="circle-text"><div class="c-title">H-5</div><div class="c-id">ID: 51</div><div class="c-weight">18.60<span>kg</span></div><div class="c-date">収穫日: 10/18</div></div></div><div class="breed-box breed-lucca">ルッカ</div></div>
+        <div class="card-wrapper" id="plot-H-6"><div class="circle yellow"><div class="circle-text"><div class="c-title">H-6</div><div class="c-id">ID: 52</div><div class="c-weight">24.70<span>kg</span></div><div class="c-date">収穫日: 10/9</div></div></div><div class="breed-box breed-moraiolo">モライオロ</div></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="row-label">I列</div>
+    <div class="cards">
+        <div class="card-wrapper" id="plot-I-1"><div class="circle green"><div class="circle-text"><div class="c-title">I-1</div><div class="c-id">ID: 53</div><div class="c-weight">16.80<span>kg</span></div><div class="c-date">収穫日: 10/5</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+        <div class="card-wrapper" id="plot-I-2"><div class="circle green"><div class="circle-text"><div class="c-title">I-2</div><div class="c-id">ID: 54</div><div class="c-weight">16.30<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-I-3"><div class="circle gray"><div class="circle-text"><div class="c-title">I-3</div><div class="c-id">ID: 55</div><div class="c-weight">4.70<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-I-4"><div class="circle blue"><div class="circle-text"><div class="c-title">I-4</div><div class="c-id">ID: 56</div><div class="c-weight">8.60<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-I-5"><div class="circle gray"><div class="circle-text"><div class="c-title">I-5</div><div class="c-id">ID: 57</div><div class="c-weight">0.20<span>kg</span></div><div class="c-date">収穫日: 10/8</div></div></div><div class="breed-box breed-cip">シプレッシーノ</div></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="row-label">J列</div>
+    <div class="cards">
+        <div class="card-wrapper" id="plot-J-1"><div class="circle green"><div class="circle-text"><div class="c-title">J-1</div><div class="c-id">ID: 58</div><div class="c-weight">19.10<span>kg</span></div><div class="c-date">収穫日: 10/5</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+        <div class="card-wrapper" id="plot-J-2"><div class="circle green"><div class="circle-text"><div class="c-title">J-2</div><div class="c-id">ID: 59</div><div class="c-weight">15.00<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-J-3"><div class="circle blue"><div class="circle-text"><div class="c-title">J-3</div><div class="c-id">ID: 60</div><div class="c-weight">7.80<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-J-4"><div class="circle blue"><div class="circle-text"><div class="c-title">J-4</div><div class="c-id">ID: 61</div><div class="c-weight">8.60<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="row-label">K列</div>
+    <div class="cards">
+        <div class="card-wrapper" id="plot-K-1"><div class="circle green"><div class="circle-text"><div class="c-title">K-1</div><div class="c-id">ID: 62</div><div class="c-weight">16.80<span>kg</span></div><div class="c-date">収穫日: 10/5</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+        <div class="card-wrapper" id="plot-K-2"><div class="circle yellow"><div class="circle-text"><div class="c-title">K-2</div><div class="c-id">ID: 63</div><div class="c-weight">26.30<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-K-3"><div class="circle blue"><div class="circle-text"><div class="c-title">K-3</div><div class="c-id">ID: 64</div><div class="c-weight">6.80<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-K-4"><div class="circle yellow"><div class="circle-text"><div class="c-title">K-4</div><div class="c-id">ID: 65</div><div class="c-weight">23.60<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="row-label">L列</div>
+    <div class="cards">
+        <div class="card-wrapper" id="plot-L-1"><div class="circle blue"><div class="circle-text"><div class="c-title">L-1</div><div class="c-id">ID: 66</div><div class="c-weight">9.70<span>kg</span></div><div class="c-date">収穫日: 10/5</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+        <div class="card-wrapper" id="plot-L-2"><div class="circle yellow"><div class="circle-text"><div class="c-title">L-2</div><div class="c-id">ID: 67</div><div class="c-weight">29.60<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-L-3"><div class="circle gray"><div class="circle-text"><div class="c-title">L-3</div><div class="c-id">ID: 68</div><div class="c-weight">4.70<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-L-4"><div class="circle green"><div class="circle-text"><div class="c-title">L-4</div><div class="c-id">ID: 69</div><div class="c-weight">19.60<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="row-label">M列</div>
+    <div class="cards">
+        <div class="card-wrapper" id="plot-M-1"><div class="circle gray"><div class="circle-text"><div class="c-title">M-1</div><div class="c-id">ID: 70</div><div class="c-weight">1.02<span>kg</span></div><div class="c-date">収穫日: 10/2</div></div></div><div class="breed-box breed-neba">ネバディロ・ブロンコ</div></div>
+        <div class="card-wrapper" id="plot-M-2"><div class="circle yellow"><div class="circle-text"><div class="c-title">M-2</div><div class="c-id">ID: 71</div><div class="c-weight">24.70<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-M-3"><div class="circle green"><div class="circle-text"><div class="c-title">M-3</div><div class="c-id">ID: 72</div><div class="c-weight">16.30<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-wrapper" id="plot-M-4"><div class="circle green"><div class="circle-text"><div class="c-title">M-4</div><div class="c-id">ID: 73</div><div class="c-weight">13.10<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+        <div class="card-empty"></div>
+    </div>
+</div>
+
+</div>
+<div class="direction-bottom">南側（竹林）</div>
+</div>
+
+<script>
+// ▼▼ ここが暗証番号の設定場所です！ ▼▼
+const SECRET_PIN = "2021"; 
+// ▲▲ " " の中の数字を好きな文字に変更してください ▲▲
+
+function checkPassword() {
+    const inputField = document.getElementById('pass-input');
+    const input = inputField.value;
+    const errorMsg = document.getElementById('pass-error');
+
+    if (input === SECRET_PIN) {
+        document.getElementById('password-overlay').style.display = 'none';
+        handleHashScroll();
+    } else {
+        errorMsg.style.display = 'block';
+        inputField.value = ''; // 入力内容をクリアする
+    }
+}
+
+// 入力欄をタップした瞬間にエラーメッセージを消す
+document.getElementById('pass-input').addEventListener('focus', function() {
+    document.getElementById('pass-error').style.display = 'none';
+});
+
+// 入力（変更）した瞬間にもエラーメッセージを消す
+document.getElementById('pass-input').addEventListener('input', function() {
+    document.getElementById('pass-error').style.display = 'none';
+});
+
+// Enterキーでも判定できるようにする
+document.getElementById('pass-input').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') { checkPassword(); }
+});
+
+function handleHashScroll() {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith("#plot-")) {
+        const targetElement = document.querySelector(hash);
+        if (targetElement) {
+            // スクロール処理
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            
+            setTimeout(() => {
+                // 背景を暗くするオーバーレイを作成
+                const overlay = document.createElement('div');
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100vw';
+                overlay.style.height = '100vh';
+                overlay.style.backgroundColor = 'rgba(0,0,0,0.85)';
+                overlay.style.zIndex = '9999';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.cursor = 'pointer';
+                
+                // 対象のカードを複製して巨大化
+                const clone = targetElement.cloneNode(true);
+                clone.style.margin = '0';
+                clone.removeAttribute('id');
+                clone.style.backgroundColor = '#fff';
+                clone.style.borderRadius = '20px';
+                clone.style.boxShadow = '0 20px 60px rgba(0,0,0,0.7)';
+                
+                // スマホ画面の80%にサイズを調整
+                clone.style.width = '80vmin';
+                clone.style.height = '80vmin'; 
+                clone.style.display = 'flex';
+                clone.style.flexDirection = 'column';
+                clone.style.justifyContent = 'center';
+                clone.style.alignItems = 'center';
+                clone.style.padding = '2vmin';
+
+                // 内部要素のフォントサイズを「vmin」を使って画面サイズに追従させる
+                const circle = clone.querySelector('.circle');
+                if (circle) { circle.style.width = '60vmin'; circle.style.height = '60vmin'; circle.style.boxShadow = 'none'; }
+                
+                const title = clone.querySelector('.c-title');
+                if (title) { title.style.fontSize = '8vmin'; title.style.marginBottom = '1vmin'; }
+                
+                const cid = clone.querySelector('.c-id');
+                if (cid) { cid.style.fontSize = '4vmin'; cid.style.marginBottom = '2vmin'; }
+                
+                const weight = clone.querySelector('.c-weight');
+                if (weight) { weight.style.fontSize = '12vmin'; weight.style.marginBottom = '2vmin'; }
+                
+                const weightSpan = clone.querySelector('.c-weight span');
+                if (weightSpan) { weightSpan.style.fontSize = '6vmin'; }
+                
+                const date = clone.querySelector('.c-date');
+                if (date) { date.style.fontSize = '4vmin'; }
+                
+                const breedBox = clone.querySelector('.breed-box');
+                if (breedBox) { 
+                    breedBox.style.width = '55vmin'; 
+                    breedBox.style.fontSize = '4.5vmin'; 
+                    breedBox.style.padding = '2vmin 0'; 
+                    breedBox.style.marginTop = '-3vmin'; 
+                    breedBox.style.borderRadius = '5px';
+                }
+                
+                overlay.appendChild(clone);
+                document.body.appendChild(overlay);
+                
+                // 画面をタップ（クリック）で元の地図に戻る
+                overlay.addEventListener('click', function() {
+                    overlay.style.opacity = '0';
+                    overlay.style.transition = 'opacity 0.3s';
+                    setTimeout(() => overlay.remove(), 300);
+                });
+            }, 300);
+        }
+    }
+}
+</script>
+</body></html>
