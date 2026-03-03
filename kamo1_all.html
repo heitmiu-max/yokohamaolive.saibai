@@ -1,0 +1,281 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>カモ1（A～H列） 2025年収穫実績マップ</title>
+<style>
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #fafafa;
+    color: #333;
+    margin: 0;
+    padding: 40px 0; /* 上下の余白のみ確保 */
+}
+
+.container {
+    background: #fff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    width: 1360px; /* 全体の幅を完全に固定。これで中の配置が絶対に崩れません */
+    box-sizing: border-box;
+    margin: 0 auto; /* 画面の中央に配置 */
+    position: relative;
+}
+
+h1 { text-align: center; font-size: 24px; margin-bottom: 30px; }
+.legend { text-align: center; margin-bottom: 30px; }
+.legend-title { font-weight: bold; margin-bottom: 15px; }
+.legend-items { display: flex; justify-content: center; gap: 20px; font-size: 12px; }
+.legend-item { display: flex; align-items: center; flex-direction: column; gap: 5px; }
+.legend-color { width: 24px; height: 24px; border-radius: 50%; }
+
+.direction-top { text-align: center; font-size: 14px; margin-bottom: 10px; }
+.divider { border-top: 1px solid #ccc; margin-bottom: 30px; }
+
+.grid { display: flex; flex-direction: column; gap: 50px; position: relative; }
+
+/* 隙間を厳密に固定 */
+.row { display: flex; align-items: center; gap: 20px; }
+.row-label { width: 80px; font-size: 14px; font-weight: bold; text-align: center; z-index: 2; }
+.cards { display: flex; gap: 20px; z-index: 2; }
+
+.card-wrapper { display: flex; flex-direction: column; align-items: center; width: 130px; }
+.card-empty { width: 130px; height: 120px; }
+
+.circle { width: 120px; height: 120px; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.circle-text { text-align: center; line-height: 1.2; margin-top: -10px; }
+.c-title { font-size: 18px; font-weight: bold; margin-bottom: 2px; }
+.c-id { font-size: 10px; opacity: 0.9; margin-bottom: 4px; }
+.c-weight { font-size: 22px; font-weight: bold; margin-bottom: 4px; }
+.c-weight span { font-size: 12px; font-weight: normal; }
+.c-date { font-size: 10px; }
+
+.breed-box { background: #fff; border: 1px solid #999; font-size: 11px; padding: 4px 0; width: 110px; text-align: center; margin-top: -12px; position: relative; z-index: 2; }
+
+.direction-bottom { display: flex; justify-content: center; margin-top: 50px; font-size: 14px; align-items: center; padding: 0 20px; }
+
+.breed-neba { color: #8e44ad; }
+.breed-cip { color: #d4ac0d; }
+.breed-fran { color: #2980b9; }
+.breed-jumbo { color: #c0392b; }
+
+/* 民家エリア追加 */
+.houses-area {
+    position: absolute;
+    left: 110px; 
+    top: 0px; 
+    height: 1350px; /* ← 下に30px大きくしました */
+    width: 400px; /* ← 樹とのマージンを右に10px増やすため、幅を縮めました */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #aaa; 
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    letter-spacing: 4em; 
+    font-size: 24px; 
+    font-weight: bold;
+    background-color: rgba(0,0,0,0.02); 
+    border-radius: 20px; 
+    border: 2px dashed #ddd; 
+    z-index: 1; 
+}
+
+.gray { background-color: #7a7a7a; color: #fff; } 
+.blue { background-color: #00a2e8; color: #fff; } 
+.green { background-color: #3b9b3f; color: #fff; }
+.yellow { background-color: #e6c100; color: #fff; } 
+.orange { background-color: #f38400; color: #fff; } 
+.red { background-color: #d73535; color: #fff; }
+
+/* 方位記号 (コンパス) */
+.compass {
+    position: absolute;
+    top: 40px;
+    right: 50px;
+    width: 80px;
+    height: 80px;
+    z-index: 10;
+}
+
+.summary-stats {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 15px 30px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.summary-title { font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+.summary-details { font-size: 13px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+.summary-total { font-size: 20px; font-weight: bold; color: #222; margin-top: 5px; }
+
+</style></head><body>
+<div class="container">
+
+<div class="compass">
+    <svg width="100%" height="100%" viewBox="-15 -15 130 130">
+        <circle cx="50" cy="50" r="35" stroke="#ccc" stroke-width="2" fill="none" />
+        <polygon points="90,50 50,42 50,58" fill="#e74c3c" />
+        <polygon points="10,50 50,42 50,58" fill="#bdc3c7" />
+        <polygon points="50,10 42,50 58,50" fill="#7f8c8d" />
+        <polygon points="50,90 42,50 58,50" fill="#bdc3c7" />
+        <circle cx="50" cy="50" r="5" fill="#2c3e50" />
+        <text x="50" y="2" font-size="18" font-weight="bold" text-anchor="middle" fill="#333">西</text>
+        <text x="50" y="112" font-size="18" font-weight="bold" text-anchor="middle" fill="#333">東</text>
+        <text x="6" y="62" font-size="18" font-weight="bold" text-anchor="end" fill="#333">南</text>
+        <text x="94" y="62" font-size="18" font-weight="bold" text-anchor="start" fill="#e74c3c">北</text>
+    </svg>
+</div>
+
+<h1>カモ1（A～H列）全列 2025年収穫実績</h1>
+<div class="legend"><div class="legend-title">【収穫量 色分けルール】</div>
+<div class="legend-items">
+<div class="legend-item"><div class="legend-color gray"></div>5kg未満</div>
+<div class="legend-item"><div class="legend-color blue"></div>5～10kg未満</div>
+<div class="legend-item"><div class="legend-color green"></div>10～20kg未満</div>
+<div class="legend-item"><div class="legend-color yellow"></div>20～30kg未満</div>
+<div class="legend-item"><div class="legend-color orange"></div>30～40kg未満</div>
+<div class="legend-item"><div class="legend-color red"></div>40kg以上</div>
+</div></div>
+<div class="direction-top">西側（ビニールハウス・防風林）</div><div class="divider"></div>
+<div class="grid">
+
+<div class="houses-area">民家</div>
+
+<div class="row"><div class="row-label">1列目</div><div class="cards">
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-wrapper"><div class="circle orange"><div class="circle-text"><div class="c-title">D-1</div><div class="c-id">ID: 4</div><div class="c-weight">32.00<span>kg</span></div><div class="c-date">収穫日: 10/3</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle red"><div class="circle-text"><div class="c-title">C-1</div><div class="c-id">ID: 3</div><div class="c-weight">42.60<span>kg</span></div><div class="c-date">収穫日: 10/10</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle orange"><div class="circle-text"><div class="c-title">B-1</div><div class="c-id">ID: 2</div><div class="c-weight">33.40<span>kg</span></div><div class="c-date">収穫日: 10/3</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle orange"><div class="circle-text"><div class="c-title">A-1</div><div class="c-id">ID: 1</div><div class="c-weight">35.01<span>kg</span></div><div class="c-date">収穫日: 10/2</div></div></div><div class="breed-box breed-neba">ネバディロ・ブロンコ</div></div>
+</div></div>
+<div class="row"><div class="row-label">2列目</div><div class="cards">
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">D-2</div><div class="c-id">ID: 9</div><div class="c-weight">22.10<span>kg</span></div><div class="c-date">収穫日: 10/21</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">C-2</div><div class="c-id">ID: 8</div><div class="c-weight">16.90<span>kg</span></div><div class="c-date">収穫日: 10/21</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle gray"><div class="circle-text"><div class="c-title">B-2</div><div class="c-id">ID: 7</div><div class="c-weight">2.70<span>kg</span></div><div class="c-date">収穫日: 10/9</div></div></div><div class="breed-box breed-cip">シプレッチノ</div></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">A-2</div><div class="c-id">ID: 6</div><div class="c-weight">29.20<span>kg</span></div><div class="c-date">収穫日: 10/10</div></div></div><div class="breed-box">ミッション</div></div>
+</div></div>
+<div class="row"><div class="row-label">3列目</div><div class="cards">
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">D-3</div><div class="c-id">ID: 14</div><div class="c-weight">21.10<span>kg</span></div><div class="c-date">収穫日: 10/21</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">C-3</div><div class="c-id">ID: 13</div><div class="c-weight">15.80<span>kg</span></div><div class="c-date">収穫日: 10/9</div></div></div><div class="breed-box breed-cip">シプレッチノ</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">B-3</div><div class="c-id">ID: 12</div><div class="c-weight">17.70<span>kg</span></div><div class="c-date">収穫日: 10/3</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle gray"><div class="circle-text"><div class="c-title">A-3</div><div class="c-id">ID: 11</div><div class="c-weight">3.50<span>kg</span></div><div class="c-date">収穫日: 9/26</div></div></div><div class="breed-box">ミッション</div></div>
+</div></div>
+<div class="row"><div class="row-label">4列目</div><div class="cards">
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">D-4</div><div class="c-id">ID: 19</div><div class="c-weight">27.40<span>kg</span></div><div class="c-date">収穫日: 10/21</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle orange"><div class="circle-text"><div class="c-title">C-4</div><div class="c-id">ID: 18</div><div class="c-weight">31.10<span>kg</span></div><div class="c-date">収穫日: 10/21</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">B-4</div><div class="c-id">ID: 17</div><div class="c-weight">19.40<span>kg</span></div><div class="c-date">収穫日: 10/21</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">A-4</div><div class="c-id">ID: 16</div><div class="c-weight">28.40<span>kg</span></div><div class="c-date">収穫日: 10/17</div></div></div><div class="breed-box">ミッション</div></div>
+</div></div>
+<div class="row"><div class="row-label">5列目</div><div class="cards">
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-wrapper"><div class="circle gray"><div class="circle-text"><div class="c-title">E-5</div><div class="c-id">ID: 20</div><div class="c-weight">2.00<span>kg</span></div><div class="c-date">収穫日: 11/6</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">D-5</div><div class="c-id">ID: 24</div><div class="c-weight">21.00<span>kg</span></div><div class="c-date">収穫日: 10/21</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle blue"><div class="circle-text"><div class="c-title">C-5</div><div class="c-id">ID: 5</div><div class="c-weight">9.60<span>kg</span></div><div class="c-date">収穫日: 10/23</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">B-5</div><div class="c-id">ID: 22</div><div class="c-weight">15.90<span>kg</span></div><div class="c-date">収穫日: 10/23</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">A-5</div><div class="c-id">ID: 21</div><div class="c-weight">28.60<span>kg</span></div><div class="c-date">収穫日: 10/17</div></div></div><div class="breed-box">ミッション</div></div>
+</div></div>
+<div class="row"><div class="row-label">6列目</div><div class="cards">
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-wrapper"><div class="circle blue"><div class="circle-text"><div class="c-title">E-6</div><div class="c-id">ID: 25</div><div class="c-weight">9.80<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">D-6</div><div class="c-id">ID: 29</div><div class="c-weight">28.60<span>kg</span></div><div class="c-date">収穫日: 10/23</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">C-6</div><div class="c-id">ID: 28</div><div class="c-weight">22.20<span>kg</span></div><div class="c-date">収穫日: 10/6</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+<div class="card-wrapper"><div class="circle blue"><div class="circle-text"><div class="c-title">B-6</div><div class="c-id">ID: 486</div><div class="c-weight">8.22<span>kg</span></div><div class="c-date">収穫日: 10/2</div></div></div><div class="breed-box breed-neba">ネバディロ・ブロンコ</div></div>
+<div class="card-wrapper"><div class="circle orange"><div class="circle-text"><div class="c-title">A-6</div><div class="c-id">ID: 26</div><div class="c-weight">32.30<span>kg</span></div><div class="c-date">収穫日: 10/23</div></div></div><div class="breed-box">ミッション</div></div>
+</div></div>
+<div class="row"><div class="row-label">7列目</div><div class="cards">
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">E-7</div><div class="c-id">ID: 30</div><div class="c-weight">12.70<span>kg</span></div><div class="c-date">収穫日: 11/6</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle orange"><div class="circle-text"><div class="c-title">D-7</div><div class="c-id">ID: 34</div><div class="c-weight">30.00<span>kg</span></div><div class="c-date">収穫日: 11/6</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle gray"><div class="circle-text"><div class="c-title">C-7</div><div class="c-id">ID: 487</div><div class="c-weight">0.18<span>kg</span></div><div class="c-date">収穫日: 10/2</div></div></div><div class="breed-box breed-neba">ネバディロ・ブロンコ</div></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">B-7</div><div class="c-id">ID: 32</div><div class="c-weight">21.80<span>kg</span></div><div class="c-date">収穫日: 10/6</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">A-7</div><div class="c-id">ID: 31</div><div class="c-weight">16.00<span>kg</span></div><div class="c-date">収穫日: 11/6</div></div></div><div class="breed-box">ミッション</div></div>
+</div></div>
+<div class="row"><div class="row-label">8列目</div><div class="cards">
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">E-8</div><div class="c-id">ID: 35</div><div class="c-weight">21.40<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">D-8</div><div class="c-id">ID: 39</div><div class="c-weight">19.40<span>kg</span></div><div class="c-date">収穫日: 11/7</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">C-8</div><div class="c-id">ID: 38</div><div class="c-weight">18.20<span>kg</span></div><div class="c-date">収穫日: 11/7</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">B-8</div><div class="c-id">ID: 37</div><div class="c-weight">18.00<span>kg</span></div><div class="c-date">収穫日: 11/7</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">A-8</div><div class="c-id">ID: 36</div><div class="c-weight">27.30<span>kg</span></div><div class="c-date">収穫日: 10/2</div></div></div><div class="breed-box">ミッション</div></div>
+</div></div>
+<div class="row"><div class="row-label">9列目</div><div class="cards">
+<div class="card-wrapper"><div class="circle gray"><div class="circle-text"><div class="c-title">H-1</div><div class="c-id">ID: 509</div><div class="c-weight">0.14<span>kg</span></div><div class="c-date">収穫日: 10/2</div></div></div><div class="breed-box breed-neba">ネバディロ・ブロンコ</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">G-1</div><div class="c-id">ID: 47</div><div class="c-weight">13.60<span>kg</span></div><div class="c-date">収穫日: 11/11</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle blue"><div class="circle-text"><div class="c-title">F-1</div><div class="c-id">ID: 15</div><div class="c-weight">9.90<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">E-9</div><div class="c-id">ID: 45</div><div class="c-weight">18.15<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">D-9</div><div class="c-id">ID: 44</div><div class="c-weight">20.60<span>kg</span></div><div class="c-date">収穫日: 11/10</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle orange"><div class="circle-text"><div class="c-title">C-9</div><div class="c-id">ID: 43</div><div class="c-weight">35.10<span>kg</span></div><div class="c-date">収穫日: 10/6</div></div></div><div class="breed-box breed-fran">フラントイオ</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">B-9</div><div class="c-id">ID: 42</div><div class="c-weight">14.50<span>kg</span></div><div class="c-date">収穫日: 10/2</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">A-9</div><div class="c-id">ID: 10</div><div class="c-weight">17.40<span>kg</span></div><div class="c-date">収穫日: 11/6</div></div></div><div class="breed-box">ミッション</div></div>
+</div></div>
+<div class="row"><div class="row-label">10列目</div><div class="cards">
+<div class="card-empty"></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">G-2</div><div class="c-id">ID: 53</div><div class="c-weight">18.20<span>kg</span></div><div class="c-date">収穫日: 11/11</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">F-2</div><div class="c-id">ID: 52</div><div class="c-weight">11.50<span>kg</span></div><div class="c-date">収穫日: 11/11</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">E-10</div><div class="c-id">ID: 51</div><div class="c-weight">26.60<span>kg</span></div><div class="c-date">収穫日: 10/2</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">D-10</div><div class="c-id">ID: 50</div><div class="c-weight">20.20<span>kg</span></div><div class="c-date">収穫日: 10/9</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle gray"><div class="circle-text"><div class="c-title">C-10</div><div class="c-id">ID: 502</div><div class="c-weight">0.00<span>kg</span></div><div class="c-date">収穫日: 未収穫</div></div></div><div class="breed-box breed-jumbo">ジャンボカラマタ</div></div>
+<div class="card-wrapper"><div class="circle gray"><div class="circle-text"><div class="c-title">B-10</div><div class="c-id">ID: 501</div><div class="c-weight">0.00<span>kg</span></div><div class="c-date">収穫日: 未収穫</div></div></div><div class="breed-box breed-jumbo">ジャンボカラマタ</div></div>
+<div class="card-empty"></div>
+</div></div>
+<div class="row"><div class="row-label">11列目</div><div class="cards">
+<div class="card-wrapper"><div class="circle gray"><div class="circle-text"><div class="c-title">H-2</div><div class="c-id">ID: 510</div><div class="c-weight">0.58<span>kg</span></div><div class="c-date">収穫日: 10/2</div></div></div><div class="breed-box breed-neba">ネバディロ・ブロンコ</div></div>
+<div class="card-empty"></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">F-3</div><div class="c-id">ID: 57</div><div class="c-weight">18.50<span>kg</span></div><div class="c-date">収穫日: 11/11</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">E-11</div><div class="c-id">ID: 56</div><div class="c-weight">21.90<span>kg</span></div><div class="c-date">収穫日: 11/11</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">D-11</div><div class="c-id">ID: 55</div><div class="c-weight">25.00<span>kg</span></div><div class="c-date">収穫日: 10/9</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">C-11</div><div class="c-id">ID: 49</div><div class="c-weight">11.10<span>kg</span></div><div class="c-date">収穫日: 10/2</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-wrapper"><div class="circle green"><div class="circle-text"><div class="c-title">B-11</div><div class="c-id">ID: 48</div><div class="c-weight">15.40<span>kg</span></div><div class="c-date">収穫日: 11/7</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-empty"></div>
+</div></div>
+<div class="row"><div class="row-label">12列目</div><div class="cards">
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+<div class="card-wrapper"><div class="circle yellow"><div class="circle-text"><div class="c-title">C-12</div><div class="c-id">ID: 54</div><div class="c-weight">23.00<span>kg</span></div><div class="c-date">収穫日: 11/7</div></div></div><div class="breed-box">ミッション</div></div>
+<div class="card-empty"></div>
+<div class="card-empty"></div>
+</div></div>
+</div>
+
+<div class="direction-bottom">
+<div class="summary-stats">
+    <div class="summary-title">【 品種別 収穫実績 (A～H列) 】</div>
+    <div class="summary-details">
+        <span><b style="color:#333;">ミッション</b>: 45本 (921.2kg)</span>
+        <span><b style="color:#2980b9;">フラントイオ</b>: 3本 (79.1kg)</span>
+        <span><b style="color:#8e44ad;">ネバディロ・ブロンコ</b>: 5本 (44.1kg)</span>
+        <span><b style="color:#d4ac0d;">シプレッシーノ</b>: 2本 (18.5kg)</span>
+        <span><b style="color:#c0392b;">ジャンボカラマタ</b>: 2本 (0.0kg)</span>
+    </div>
+    <div class="summary-total">総合計: 57本 / 1,062.9 kg</div>
+</div>
+</div>
+</div>
+</body></html>
