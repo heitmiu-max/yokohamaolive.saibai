@@ -38,8 +38,8 @@ h1 { text-align: center; font-size: 24px; margin-bottom: 30px; }
 .farm-area-sw {
     position: absolute;
     left: 0px; 
-    top: 1405px; /* 1365pxから40px下へ */
-    height: 1365px; /* 下へ下げた分、高さを調整 */
+    top: 1405px; 
+    height: 1365px; 
     width: 320px; 
     display: flex; align-items: center; justify-content: center;
     color: #aaa; writing-mode: vertical-rl; text-orientation: upright;
@@ -50,9 +50,9 @@ h1 { text-align: center; font-size: 24px; margin-bottom: 30px; }
 /* 左下の通路エリア（空いた80pxのスペースに中央揃え → 15px右へ移動） */
 .pathway-sw {
     position: absolute;
-    left: 335px; /* 320pxから15px右へ */
-    top: 1405px; /* 1365pxから40px下へ */
-    height: 1365px; /* 下へ下げた分、高さを調整 */
+    left: 335px; 
+    top: 1405px; 
+    height: 1365px; 
     width: 80px; 
     display: flex; align-items: center; justify-content: center;
     color: #999; writing-mode: vertical-rl; text-orientation: upright;
@@ -65,7 +65,7 @@ h1 { text-align: center; font-size: 24px; margin-bottom: 30px; }
     position: absolute;
     left: 1080px; 
     top: 0px; 
-    height: 1305px; /* 元の1270px + 35px追加 */
+    height: 1305px; 
     width: 100px; 
     display: flex; align-items: center; justify-content: center;
     color: #aaa; writing-mode: vertical-rl; text-orientation: upright;
@@ -83,11 +83,29 @@ h1 { text-align: center; font-size: 24px; margin-bottom: 30px; }
 .summary-details { font-size: 13px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
 .summary-total { font-size: 20px; font-weight: bold; color: #222; margin-top: 5px; }
 
+/* パスワード入力画面を一番手前に表示するための設定 */
+#password-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: rgba(30, 30, 30, 0.98); z-index: 99999;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff;
+}
+#pass-input { padding: 12px; font-size: 24px; width: 180px; text-align: center; border-radius: 8px; border: none; margin-bottom: 20px; letter-spacing: 5px;}
+#pass-btn { padding: 12px 40px; font-size: 18px; background-color: #3b9b3f; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;}
+#pass-error { color: #ff6b6b; margin-top: 15px; display: none; font-weight: bold;}
+
 html { scroll-behavior: smooth; }
 .card-wrapper { scroll-margin-top: 150px; scroll-margin-left: 50px; }
 :target .circle { box-shadow: 0 0 0 10px rgba(41, 128, 185, 0.4); animation: focus-pulse 1.5s 2; }
 @keyframes focus-pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(41, 128, 185, 0.7); } 50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(41, 128, 185, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(41, 128, 185, 0); } }
 </style></head><body>
+
+<div id="password-overlay">
+    <h2 style="margin-bottom: 10px;">カモ2 収穫実績ダッシュボード</h2>
+    <p style="margin-bottom: 30px; color:#aaa;">暗証番号を入力してください</p>
+    <input type="password" id="pass-input" placeholder="****" inputmode="numeric" pattern="\d*">
+    <button id="pass-btn" onclick="checkPassword()">データを見る</button>
+    <p id="pass-error">暗証番号が違います</p>
+</div>
 <div class="container">
 <div class="compass">
     <svg width="100%" height="100%" viewBox="-15 -15 130 130">
@@ -297,50 +315,73 @@ html { scroll-behavior: smooth; }
     <div class="summary-total">総合計: 100本 / 1312.8 kg</div>
 </div>
 </div>
-</div>
+
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+// ▼▼ ここが暗証番号の設定場所です！ ▼▼
+const SECRET_PIN = "2021"; 
+// ▲▲ " " の中の数字を好きな文字に変更してください ▲▲
+
+function checkPassword() {
+    const input = document.getElementById('pass-input').value;
+    if (input === SECRET_PIN) {
+        document.getElementById('password-overlay').style.display = 'none';
+        // パスワード解除後にハッシュがあればスクロール処理を実行
+        handleHashScroll();
+    } else {
+        document.getElementById('pass-error').style.display = 'block';
+    }
+}
+
+// Enterキーでも判定できるようにする
+document.getElementById('pass-input').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') { checkPassword(); }
+});
+
+function handleHashScroll() {
     const hash = window.location.hash;
     if (hash && hash.startsWith("#plot-")) {
         const targetElement = document.querySelector(hash);
         if (targetElement) {
             targetElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-            const overlay = document.createElement('div');
-            overlay.style.position = 'fixed'; overlay.style.top = '0'; overlay.style.left = '0';
-            overlay.style.width = '100vw'; overlay.style.height = '100vh';
-            overlay.style.backgroundColor = 'rgba(0,0,0,0.85)'; overlay.style.zIndex = '9999';
-            overlay.style.display = 'flex'; overlay.style.alignItems = 'center';
-            overlay.style.justifyContent = 'center'; overlay.style.cursor = 'pointer';
             
-            const clone = targetElement.cloneNode(true);
-            clone.style.margin = '0'; clone.removeAttribute('id');
-            clone.style.backgroundColor = '#fff'; clone.style.borderRadius = '20px';
-            clone.style.boxShadow = '0 20px 60px rgba(0,0,0,0.7)';
-            clone.style.width = '80vmin'; clone.style.height = '80vmin'; 
-            clone.style.display = 'flex'; clone.style.flexDirection = 'column';
-            clone.style.justifyContent = 'center'; clone.style.alignItems = 'center';
-            clone.style.padding = '2vmin';
+            setTimeout(() => {
+                const overlay = document.createElement('div');
+                overlay.style.position = 'fixed'; overlay.style.top = '0'; overlay.style.left = '0';
+                overlay.style.width = '100vw'; overlay.style.height = '100vh';
+                overlay.style.backgroundColor = 'rgba(0,0,0,0.85)'; overlay.style.zIndex = '9999';
+                overlay.style.display = 'flex'; overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center'; overlay.style.cursor = 'pointer';
+                
+                const clone = targetElement.cloneNode(true);
+                clone.style.margin = '0'; clone.removeAttribute('id');
+                clone.style.backgroundColor = '#fff'; clone.style.borderRadius = '20px';
+                clone.style.boxShadow = '0 20px 60px rgba(0,0,0,0.7)';
+                clone.style.width = '80vmin'; clone.style.height = '80vmin'; 
+                clone.style.display = 'flex'; clone.style.flexDirection = 'column';
+                clone.style.justifyContent = 'center'; clone.style.alignItems = 'center';
+                clone.style.padding = '2vmin';
 
-            const circle = clone.querySelector('.circle');
-            if (circle) { circle.style.width = '60vmin'; circle.style.height = '60vmin'; circle.style.boxShadow = 'none'; }
-            const title = clone.querySelector('.c-title');
-            if (title) { title.style.fontSize = '8vmin'; title.style.marginBottom = '1vmin'; }
-            const cid = clone.querySelector('.c-id');
-            if (cid) { cid.style.fontSize = '4vmin'; cid.style.marginBottom = '2vmin'; }
-            const weight = clone.querySelector('.c-weight');
-            if (weight) { weight.style.fontSize = '12vmin'; weight.style.marginBottom = '2vmin'; }
-            const weightSpan = clone.querySelector('.c-weight span');
-            if (weightSpan) { weightSpan.style.fontSize = '6vmin'; }
-            const date = clone.querySelector('.c-date');
-            if (date) { date.style.fontSize = '4vmin'; }
-            const breedBox = clone.querySelector('.breed-box');
-            if (breedBox) { breedBox.style.width = '55vmin'; breedBox.style.fontSize = '4.5vmin'; breedBox.style.padding = '2vmin 0'; breedBox.style.marginTop = '-3vmin'; breedBox.style.borderRadius = '5px'; }
-            
-            overlay.appendChild(clone);
-            document.body.appendChild(overlay);
-            overlay.addEventListener('click', function() { overlay.style.opacity = '0'; overlay.style.transition = 'opacity 0.3s'; setTimeout(() => overlay.remove(), 300); });
+                const circle = clone.querySelector('.circle');
+                if (circle) { circle.style.width = '60vmin'; circle.style.height = '60vmin'; circle.style.boxShadow = 'none'; }
+                const title = clone.querySelector('.c-title');
+                if (title) { title.style.fontSize = '8vmin'; title.style.marginBottom = '1vmin'; }
+                const cid = clone.querySelector('.c-id');
+                if (cid) { cid.style.fontSize = '4vmin'; cid.style.marginBottom = '2vmin'; }
+                const weight = clone.querySelector('.c-weight');
+                if (weight) { weight.style.fontSize = '12vmin'; weight.style.marginBottom = '2vmin'; }
+                const weightSpan = clone.querySelector('.c-weight span');
+                if (weightSpan) { weightSpan.style.fontSize = '6vmin'; }
+                const date = clone.querySelector('.c-date');
+                if (date) { date.style.fontSize = '4vmin'; }
+                const breedBox = clone.querySelector('.breed-box');
+                if (breedBox) { breedBox.style.width = '55vmin'; breedBox.style.fontSize = '4.5vmin'; breedBox.style.padding = '2vmin 0'; breedBox.style.marginTop = '-3vmin'; breedBox.style.borderRadius = '5px'; }
+                
+                overlay.appendChild(clone);
+                document.body.appendChild(overlay);
+                overlay.addEventListener('click', function() { overlay.style.opacity = '0'; overlay.style.transition = 'opacity 0.3s'; setTimeout(() => overlay.remove(), 300); });
+            }, 300); // 300ms待ってからポップアップ（スクロール完了後）
         }
     }
-});
+}
 </script>
 </body></html>
